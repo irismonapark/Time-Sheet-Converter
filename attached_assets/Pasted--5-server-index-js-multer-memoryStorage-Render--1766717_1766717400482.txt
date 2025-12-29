@@ -1,0 +1,123 @@
+### 5. server/index.js (핵심 구현)
+
+**중요 포인트:**
+- `multer.memoryStorage()` 사용 (Render 임시 파일시스템 이슈 방지)
+- 프로덕션에서 `client/dist` 정적 파일 서빙
+- PORT는 `process.env.PORT || 10000`
+- `0.0.0.0` 바인딩 필수
+- CORS 설정
+- Health check 엔드포인트 (`/api/health`)
+
+**API 엔드포인트:**
+1. `POST /api/sheets` - 업로드된 파일의 시트 목록 반환
+2. `POST /api/convert` - 파일 변환 및 다운로드
+
+**ExcelJS로 구현해야 할 것:**
+- Buffer에서 직접 파싱 (`workbook.xlsx.load(buffer)`)
+- 출력 파일 생성 시:
+  - 헤더 행 배경색 노란색 (#FFFF00)
+  - 모든 셀 테두리
+  - 숫자 천단위 구분 쉼표
+  - 자동 너비 조정
+
+### 6. client/src/App.jsx (MUI 반응형 UI)
+
+**UI 플로우:**
+1. 파일 업로드 버튼 (드래그앤드롭 지원)
+2. 시트 선택 드롭다운 (업로드 후 자동 표시)
+3. "상세명세서로 변환" 버튼
+4. "다시하기" 버튼
+5. 로딩 인디케이터
+6. 성공/에러 메시지
+
+**MUI 컴포넌트 사용:**
+- Container, Paper, Button, Select, MenuItem
+- FormControl, InputLabel, CircularProgress
+- Alert, Box, Typography
+- Icons: CloudUpload, Refresh, Download
+
+**반응형:**
+- 모바일/태블릿/데스크톱 대응
+- `maxWidth="md"`, `fullWidth` 활용
+
+**API 통신:**
+```javascript
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:10000/api';
+```
+
+### 7. client/vite.config.js
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': 'http://localhost:10000'
+    }
+  }
+})
+```
+
+---
+
+## 🎨 디자인 요구사항
+
+- **MUI 테마:** 글로벌 트렌드 (깔끔하고 모던)
+- **컬러:** Primary (Blue), Success (Green), Warning (Yellow)
+- **타이포그래피:** 한글 가독성 좋게
+- **버튼:** Large 사이즈, 아이콘 포함
+- **간격:** 적절한 패딩과 마진 (MUI spacing 활용)
+
+---
+
+## ⚠️ Render 배포 시 주의사항 (반드시 구현)
+
+### 1. 메모리 효율
+- multer는 반드시 `memoryStorage()` 사용
+- 대용량 파일 처리 시 스트리밍 고려
+
+### 2. 파일 시스템
+- Render는 ephemeral filesystem (재시작 시 삭제)
+- 디스크 저장 절대 금지, Buffer만 사용
+
+### 3. 빌드 최적화
+- `npm run build`로 client/dist 생성 확인
+- Express가 `dist` 폴더 정확히 서빙하는지 확인
+
+### 4. 환경변수
+- `NODE_ENV=production` 체크
+- `process.env.PORT` 사용
+
+### 5. 헬스체크
+- `/api/health` 엔드포인트로 Render 웜업 방지
+
+---
+
+## 📝 README.md 작성
+
+다음 내용 포함:
+- 프로젝트 설명
+- 로컬 실행 방법
+- Render 배포 가이드
+- 사용 방법 스크린샷
+
+---
+
+## ✅ 체크리스트
+
+구현 완료 후 다음을 확인해주세요:
+
+- [ ] 로컬에서 `npm install && npm run install-client && npm run build && npm start` 실행 확인
+- [ ] http://localhost:10000 접속 시 UI 정상 표시
+- [ ] 파일 업로드 → 시트 선택 → 변환 → 다운로드 전체 플로우 테스트
+- [ ] 변환된 엑셀 파일 열어서 데이터 확인
+- [ ] 모바일 화면에서도 UI 정상 표시
+- [ ] GitHub 푸시 전 `.gitignore` 확인
+- [ ] render.yaml 파일 존재 확인
+
+---
+
+위 내용대로 완벽하게 작동하는 풀스택 앱을 만들어주세요.
+특히 Render 무료 배포가 100% 성공하도록 설정 파일과 코드를 정확히 구현해주세요.
